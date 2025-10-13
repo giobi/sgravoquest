@@ -18,8 +18,7 @@ dist-ssr/
 .DS_Store
 Thumbs.db
 
-# Env files
-.env
+# Env files (ma non in produzione - serve per build)
 .env.local
 .env.*.local
 

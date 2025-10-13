@@ -11,9 +11,15 @@ function App() {
 
   const generateQuest = async () => {
     setIsGenerating(true)
-    const generator = new AIQuestGenerator(
-      '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'
-    )
+    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY
+    if (!apiKey) {
+      setDialogText(['❌ API Key mancante', 'Configura VITE_OPENROUTER_API_KEY'])
+      setShowDialog(true)
+      setIsGenerating(false)
+      return
+    }
+
+    const generator = new AIQuestGenerator(apiKey)
 
     try {
       const quest = await generator.generateQuest(
