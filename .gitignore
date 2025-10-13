@@ -19,6 +19,7 @@ dist-ssr/
 Thumbs.db
 
 # Env files (ma non in produzione - serve per build)
+.env
 .env.local
 .env.*.local
 

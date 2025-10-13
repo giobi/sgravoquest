@@ -11,8 +11,8 @@ function App() {
 
   const generateQuest = async () => {
     setIsGenerating(true)
-    // TODO: Move to backend proxy for production
-    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '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'
+    // Groq API key (MOLTO più veloce di OpenRouter!)
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY
 
     const generator = new AIQuestGenerator(apiKey)
 
@@ -67,7 +67,7 @@ function App() {
       )}
 
       <footer>
-        <p>Powered by OpenRouter AI • Assets from <a href="https://kenney.nl" target="_blank">Kenney.nl</a> (CC0)</p>
+        <p>Powered by Groq AI (llama-3.3-70b) • Assets from <a href="https://kenney.nl" target="_blank">Kenney.nl</a> (CC0)</p>
       </footer>
     </div>
   )

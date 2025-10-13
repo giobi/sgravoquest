@@ -57,10 +57,10 @@ export interface DialogChoice {
 
 export class AIQuestGenerator {
   private apiKey: string
-  private apiUrl = 'https://openrouter.ai/api/v1/chat/completions'
+  private apiUrl = 'https://api.groq.com/openai/v1/chat/completions'
 
-  // Usa modello free di OpenRouter
-  private model = 'meta-llama/llama-3.2-3b-instruct:free'
+  // Groq free models (MOLTO più veloce!)
+  private model = 'llama-3.3-70b-versatile' // o 'gemma2-9b-it'
 
   constructor(apiKey: string) {
     this.apiKey = apiKey
@@ -131,9 +131,7 @@ Formato JSON:
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://sgravoquest.giobi.com',
-        'X-Title': 'SgravoQuest'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: this.model,
