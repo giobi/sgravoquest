@@ -11,13 +11,8 @@ function App() {
 
   const generateQuest = async () => {
     setIsGenerating(true)
-    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY
-    if (!apiKey) {
-      setDialogText(['❌ API Key mancante', 'Configura VITE_OPENROUTER_API_KEY'])
-      setShowDialog(true)
-      setIsGenerating(false)
-      return
-    }
+    // TODO: Move to backend proxy for production
+    const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY || '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'
 
     const generator = new AIQuestGenerator(apiKey)
 
