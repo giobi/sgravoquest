@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react'
-import { Application } from 'pixi.js'
+import { Application, Assets } from 'pixi.js'
 import { TilemapRenderer } from '../engine/TilemapRenderer'
-import { getTileset } from '../assets/asset-catalog'
+import { Player } from '../engine/Player'
+import { InputManager } from '../engine/InputManager'
+import { getTileset, getSprite } from '../assets/asset-catalog'
 
 interface GameCanvasProps {
   width: number
@@ -47,8 +49,43 @@ function GameCanvas({ width, height }: GameCanvasProps) {
       const testMap = createTestMap()
       tilemapRenderer.render(testMap)
 
+      // Carica sprite hero dalla CDN
+      const heroSprite = getSprite('hero')
+      if (!heroSprite) {
+        console.error('Hero sprite not found!')
+        return
+      }
+
+      const heroTexture = await Assets.load(heroSprite.url)
+
+      // Crea player
+      const player = new Player({
+        x: 5,
+        y: 5,
+        texture: heroTexture,
+        speed: 4
+      })
+
+      app.stage.addChild(player.container)
+
+      // Setup input
+      const inputManager = new InputManager()
+
+      // Game loop
+      app.ticker.add(() => {
+        // Update player position (smooth movement)
+        player.update()
+
+        // Handle input (only when not moving)
+        const { dx, dy } = inputManager.getMovementDirection()
+        if (dx !== 0 || dy !== 0) {
+          player.move(dx, dy, testMap)
+        }
+      })
+
       console.log('✅ Game initialized!')
       console.log('📦 Assets loaded from:', tileset.url)
+      console.log('🎮 Controls: Arrow Keys or WASD')
     }
 
     initGame()
