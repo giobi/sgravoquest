@@ -1,0 +1,65 @@
+.dialog-box {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 700px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 3px solid #0f3460;
+  border-radius: 12px;
+  padding: 24px 28px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  z-index: 1000;
+}
+
+.dialog-text {
+  color: #eee;
+  font-size: 18px;
+  line-height: 1.6;
+  min-height: 60px;
+  margin-bottom: 12px;
+}
+
+.dialog-prompt {
+  text-align: right;
+  color: #4a9eff;
+  font-size: 24px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.dialog-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.dialog-choice-button {
+  background: #0f3460;
+  border: 2px solid #4a9eff;
+  color: #eee;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-family: 'Courier New', monospace;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dialog-choice-button:hover {
+  background: #4a9eff;
+  color: #1a1a2e;
+  transform: translateX(4px);
+}
+
+.dialog-choice-button:active {
+  transform: scale(0.98);
+}
