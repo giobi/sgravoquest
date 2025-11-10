@@ -53,30 +53,28 @@ export default async function handler(
       throw new Error('GEMINI_API_KEY not configured');
     }
 
-    const systemPrompt = `Generate a RPG quest for: "${prompt}"
+    const systemPrompt = `Generate RPG quest: "${prompt}"
 
-Return valid JSON (can be in markdown):
+Return ONLY JSON:
 {
-  "title": "Quest title in Italian (short)",
-  "description": "Quest description in Italian (1-2 sentences)",
-  "objectives": ["objective 1", "objective 2", "objective 3"],
+  "title": "Title in Italian",
+  "description": "Description in Italian (1 sentence)",
+  "objectives": ["obj 1", "obj 2"],
   "map": {
-    "width": 15,
-    "height": 10,
-    "tiles": [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], ...10 rows of 15 tiles each]
+    "width": 10,
+    "height": 7,
+    "tiles": [[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0]]
   },
   "entities": [
-    {"type": "player", "x": 2, "y": 5},
-    {"type": "enemy", "x": 12, "y": 5, "name": "Enemy Name"},
-    {"type": "npc", "x": 5, "y": 3, "name": "NPC Name"}
+    {"type": "player", "x": 1, "y": 3},
+    {"type": "enemy", "x": 8, "y": 4, "name": "Nome"}
   ]
 }
 
 Tiles: 0=grass, 1=water, 2=mountain, 3=forest, 4=path
-Types: player, enemy, npc, item
-Keep description SHORT to fit in JSON size limit.`;
+Map: 10 columns × 7 rows EXACT
+KEEP IT SHORT`;
 
-    // Call Google Gemini API
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
       {
@@ -89,8 +87,8 @@ Keep description SHORT to fit in JSON size limit.`;
             parts: [{ text: systemPrompt }]
           }],
           generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 4000,
+            temperature: 0.6,
+            maxOutputTokens: 3000,
           }
         }),
       }
@@ -105,20 +103,17 @@ Keep description SHORT to fit in JSON size limit.`;
     const data = await response.json();
     const questText = data.candidates[0].content.parts[0].text;
 
-    // Parse JSON from response (handles markdown wrapping)
+    // Parse JSON from response
     let quest: Quest;
     try {
-      // Try direct parse first
       quest = JSON.parse(questText);
     } catch (parseError) {
-      // Extract from markdown blocks
       const jsonMatch = questText.match(/```json\n?([\s\S]*?)\n?```/) ||
                        questText.match(/```\n?([\s\S]*?)\n?```/) ||
                        questText.match(/\{[\s\S]*\}/);
 
       if (jsonMatch) {
         let jsonText = jsonMatch[1] || jsonMatch[0];
-        // Clean up any markdown artifacts
         jsonText = jsonText.trim();
         quest = JSON.parse(jsonText);
       } else {
@@ -132,7 +127,7 @@ Keep description SHORT to fit in JSON size limit.`;
       throw new Error('Invalid quest structure - missing required fields');
     }
 
-    // Validate map dimensions (be flexible, just check they exist)
+    // Validate map dimensions
     if (!Array.isArray(quest.map.tiles) || quest.map.tiles.length === 0) {
       throw new Error('Invalid map tiles');
     }
