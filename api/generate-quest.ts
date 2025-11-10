@@ -62,7 +62,7 @@ Return JSON (Italian):
   "map": {
     "width": 10,
     "height": 7,
-    "tiles": [[1,1,1,1,1,1,1,1,1,1], ...7 rows total]
+    "tiles": [[24,24,24,24,24,24,24,24,24,24], ...7 rows total]
   },
   "entities": [
     {"type": "player", "x": 1, "y": 3},
@@ -71,14 +71,13 @@ Return JSON (Italian):
 }
 
 IMPORTANT - Tile indices from tiny-dungeon tileset:
-1=floor (gray stone floor)
-14=wall (dark brick wall)
-25=decorative floor
-26=stone path
-27=special tile
+24=floor (orange/brown stone - WALKABLE)
+12=wall (gray brick - SOLID OBSTACLE)
+28=decorative floor variant
+29=special floor tile
 
-Use varied tiles (1,14,25,26,27) to create interesting dungeon layout.
-Make floor=1 for most walkable areas, wall=14 for borders/obstacles.`;
+Use tiles 24 (floor), 12 (wall), 28-29 (decorations).
+Create room with walls (12) on borders, floor (24) inside.`;
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
