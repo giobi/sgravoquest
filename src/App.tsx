@@ -86,7 +86,7 @@ function App() {
 
       <footer>
         <p>Powered by Claude 3 Haiku via OpenRouter • Assets from <a href="https://kenney.nl" target="_blank">Kenney.nl</a> (CC0)</p>
-        <p style={{ fontSize: "0.75rem", opacity: 0.6, marginTop: "0.25rem" }}>v0.3.0-alpha</p>
+        <p style={{ fontSize: "0.75rem", opacity: 0.6, marginTop: "0.25rem" }}>v0.4.0-alpha</p>
       </footer>
     </div>
   )
