@@ -52,7 +52,7 @@ export default async function handler(
       throw new Error('OPENROUTER_API_KEY not configured');
     }
 
-    const systemPrompt = `Generate RPG quest: "${prompt}"
+    const systemPrompt = `Generate RPG dungeon quest: "${prompt}"
 
 Return JSON (Italian):
 {
@@ -62,14 +62,23 @@ Return JSON (Italian):
   "map": {
     "width": 10,
     "height": 7,
-    "tiles": [[0,0,0,0,0,0,0,0,0,0], ...7 rows]
+    "tiles": [[1,1,1,1,1,1,1,1,1,1], ...7 rows total]
   },
   "entities": [
     {"type": "player", "x": 1, "y": 3},
     {"type": "enemy", "x": 8, "y": 4, "name": "Name"}
   ]
 }
-Tiles: 0=grass 1=water 2=mountain 3=forest 4=path`;
+
+IMPORTANT - Tile indices from tiny-dungeon tileset:
+1=floor (gray stone floor)
+14=wall (dark brick wall)
+25=decorative floor
+26=stone path
+27=special tile
+
+Use varied tiles (1,14,25,26,27) to create interesting dungeon layout.
+Make floor=1 for most walkable areas, wall=14 for borders/obstacles.`;
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
