@@ -1,33 +1,51 @@
 import { useState } from 'react'
 import GameCanvas from './components/GameCanvas'
 import DialogBox from './components/DialogBox'
-import { AIQuestGenerator } from './engine/AIQuestGenerator'
+// import { AIQuestGenerator } from './engine/AIQuestGenerator' // TODO: Re-enable when backend proxy is ready
+import type { Quest } from './engine/AIQuestGenerator'
 import './App.css'
 
 function App() {
   const [showDialog, setShowDialog] = useState(false)
   const [dialogText, setDialogText] = useState<string[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
+  const [currentQuest, setCurrentQuest] = useState<Quest | null>(null)
 
   const generateQuest = async () => {
     setIsGenerating(true)
-    // Groq API key (MOLTO più veloce di OpenRouter!)
-    const apiKey = import.meta.env.VITE_GROQ_API_KEY
-
-    const generator = new AIQuestGenerator(apiKey)
 
     try {
-      const quest = await generator.generateQuest(
-        'Un giovane guerriero deve salvare il villaggio da un drago che terrorizza la popolazione'
-      )
+      // Call backend API proxy (sicuro!)
+      
+
+      const response = await fetch("/api/generate-quest", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: 'Un giovane guerriero deve salvare il villaggio da un drago che terrorizza la popolazione'
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Backend error: ${response.statusText}`)
+      }
+
+      const quest = await response.json()
+
+      // Salva la quest nello state
+      setCurrentQuest(quest)
 
       setDialogText([
         `⚔️ ${quest.title}`,
         quest.description,
         `Obiettivi: ${quest.objectives.join(', ')}`,
-        'Premi SPAZIO per iniziare l\'avventura!'
+        'Premi SPAZIO per caricare la mappa!'
       ])
       setShowDialog(true)
+
+      console.log('✅ Quest caricata:', quest)
     } catch (error) {
       console.error('Errore generazione quest:', error)
       setDialogText([
@@ -48,7 +66,7 @@ function App() {
       </header>
 
       <main>
-        <GameCanvas width={800} height={600} />
+        <GameCanvas width={800} height={600} quest={currentQuest} />
 
         <button
           className="generate-button"

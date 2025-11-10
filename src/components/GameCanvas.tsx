@@ -4,15 +4,20 @@ import { TilemapRenderer } from '../engine/TilemapRenderer'
 import { Player } from '../engine/Player'
 import { InputManager } from '../engine/InputManager'
 import { getTileset, getSprite } from '../assets/asset-catalog'
+import type { Quest } from '../engine/AIQuestGenerator'
 
 interface GameCanvasProps {
   width: number
   height: number
+  quest?: Quest | null
 }
 
-function GameCanvas({ width, height }: GameCanvasProps) {
+function GameCanvas({ width, height, quest }: GameCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null)
   const appRef = useRef<Application | null>(null)
+  const tilemapRendererRef = useRef<TilemapRenderer | null>(null)
+  const playerRef = useRef<Player | null>(null)
+  const currentMapRef = useRef<number[][]>(createTestMap())
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -44,9 +49,11 @@ function GameCanvas({ width, height }: GameCanvasProps) {
       // Crea renderer tilemap
       const tilemapRenderer = new TilemapRenderer(app, tileset)
       await tilemapRenderer.load()
+      tilemapRendererRef.current = tilemapRenderer
 
-      // Crea una semplice mappa di test
+      // Crea una semplice mappa di test iniziale
       const testMap = createTestMap()
+      currentMapRef.current = testMap
       tilemapRenderer.render(testMap)
 
       // Carica sprite hero dalla CDN
@@ -65,6 +72,7 @@ function GameCanvas({ width, height }: GameCanvasProps) {
         texture: heroTexture,
         speed: 4
       })
+      playerRef.current = player
 
       app.stage.addChild(player.container)
 
@@ -79,7 +87,7 @@ function GameCanvas({ width, height }: GameCanvasProps) {
         // Handle input (only when not moving)
         const { dx, dy } = inputManager.getMovementDirection()
         if (dx !== 0 || dy !== 0) {
-          player.move(dx, dy, testMap)
+          player.move(dx, dy, currentMapRef.current)
         }
       })
 
@@ -97,6 +105,28 @@ function GameCanvas({ width, height }: GameCanvasProps) {
       }
     }
   }, [width, height])
+
+  // Effect per caricare la quest quando cambia
+  useEffect(() => {
+    if (!quest || !tilemapRendererRef.current || !playerRef.current) return
+
+    console.log('🗺️ Caricamento mappa dalla quest:', quest.title)
+
+    // Prendi la prima mappa della quest
+    const questMap = quest.maps[0]
+    if (questMap && questMap.tiles) {
+      // Carica la nuova mappa
+      tilemapRendererRef.current.render(questMap.tiles)
+      currentMapRef.current = questMap.tiles
+
+      // Riposiziona il player alla posizione di spawn
+      const startPos = questMap.startPosition || { x: 5, y: 5 }
+      playerRef.current.setPosition(startPos.x, startPos.y)
+
+      console.log('✅ Mappa caricata:', questMap.name, `${questMap.width}x${questMap.height}`)
+      console.log('✅ Player posizionato a:', startPos)
+    }
+  }, [quest])
 
   return (
     <div

@@ -80,7 +80,7 @@ Tiles: 0=grass 1=water 2=mountain 3=forest 4=path`;
         'X-Title': 'SgravoQuest'
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp:free',
+        model: 'anthropic/claude-3-haiku',
         messages: [{ role: 'user', content: systemPrompt }],
         temperature: 0.6,
         max_tokens: 2500

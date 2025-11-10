@@ -51,14 +51,33 @@ function DialogBox({ text, choices, onComplete }: DialogBoxProps) {
     }
   }
 
+  // Aggiungi supporto tastiera (SPAZIO o ENTER)
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault()
+        handleNext()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [currentLine, isTyping, text, choices, onComplete])
+
   const showChoices = !isTyping && currentLine === text.length - 1 && choices
 
   return (
     <div className="dialog-box" onClick={handleNext}>
       <div className="dialog-text">{displayedText}</div>
 
-      {!isTyping && !showChoices && (
-        <div className="dialog-prompt">▼</div>
+      {!isTyping && !showChoices && currentLine < text.length - 1 && (
+        <div className="dialog-prompt">▼ Clicca o premi SPAZIO per continuare</div>
+      )}
+
+      {!isTyping && !showChoices && currentLine === text.length - 1 && !choices && (
+        <button className="dialog-close-button" onClick={handleNext}>
+          ✕ Chiudi (SPAZIO)
+        </button>
       )}
 
       {showChoices && (

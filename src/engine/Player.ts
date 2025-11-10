@@ -106,6 +106,20 @@ export class Player {
     }
   }
 
+  /**
+   * Teleport player to a new tile position
+   */
+  setPosition(tileX: number, tileY: number): void {
+    this.tileX = tileX
+    this.tileY = tileY
+    this.targetX = tileX * this.tileSize
+    this.targetY = tileY * this.tileSize
+    this.sprite.x = this.targetX
+    this.sprite.y = this.targetY
+    this.isMoving = false
+    console.log(`🏃 Player teleported to tile (${tileX}, ${tileY})`)
+  }
+
   destroy(): void {
     this.container.destroy({ children: true })
   }
