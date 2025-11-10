@@ -25,9 +25,11 @@ header p {
 main {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
+  gap: 20px;
 }
 
 footer {
@@ -46,7 +48,6 @@ footer a:hover {
 }
 
 .generate-button {
-  margin-top: 20px;
   padding: 16px 32px;
   font-size: 18px;
   font-weight: bold;

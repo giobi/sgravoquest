@@ -64,7 +64,7 @@ export class TilemapRenderer {
         const tileIndex = map[y][x]
 
         // Skip empty tiles (index 0 or negative)
-        if (tileIndex <= 0) continue
+        if (tileIndex < 0) continue
 
         // Get tile texture
         const texture = this.tileTextures[tileIndex]
