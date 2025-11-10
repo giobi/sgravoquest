@@ -25,7 +25,6 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -47,61 +46,61 @@ export default async function handler(
   }
 
   try {
-    const geminiKey = process.env.GEMINI_API_KEY;
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
 
-    if (!geminiKey) {
-      throw new Error('GEMINI_API_KEY not configured');
+    if (!openrouterKey) {
+      throw new Error('OPENROUTER_API_KEY not configured');
     }
 
     const systemPrompt = `Generate RPG quest: "${prompt}"
 
-Return ONLY JSON:
+Return JSON (Italian):
 {
-  "title": "Title in Italian",
-  "description": "Description in Italian (1 sentence)",
-  "objectives": ["obj 1", "obj 2"],
+  "title": "Quest title",
+  "description": "Description (1 sentence)",
+  "objectives": ["objective 1", "objective 2"],
   "map": {
     "width": 10,
     "height": 7,
-    "tiles": [[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0]]
+    "tiles": [[0,0,0,0,0,0,0,0,0,0], ...7 rows]
   },
   "entities": [
     {"type": "player", "x": 1, "y": 3},
-    {"type": "enemy", "x": 8, "y": 4, "name": "Nome"}
+    {"type": "enemy", "x": 8, "y": 4, "name": "Name"}
   ]
 }
+Tiles: 0=grass 1=water 2=mountain 3=forest 4=path`;
 
-Tiles: 0=grass, 1=water, 2=mountain, 3=forest, 4=path
-Map: 10 columns × 7 rows EXACT
-KEEP IT SHORT`;
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: systemPrompt }]
-          }],
-          generationConfig: {
-            temperature: 0.6,
-            maxOutputTokens: 3000,
-          }
-        }),
-      }
-    );
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openrouterKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://sgravoquest.vercel.app',
+        'X-Title': 'SgravoQuest'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.0-flash-exp:free',
+        messages: [{ role: 'user', content: systemPrompt }],
+        temperature: 0.6,
+        max_tokens: 2500
+      }),
+    });
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Gemini API error:', errorData);
-      throw new Error(`Gemini API error: ${response.status}`);
+      console.error('OpenRouter error:', errorData);
+      throw new Error(`OpenRouter API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const questText = data.candidates[0].content.parts[0].text;
+
+    if (!data.choices || !data.choices[0]) {
+      console.error('No choices in response:', JSON.stringify(data));
+      throw new Error('API returned no choices');
+    }
+
+    const questText = data.choices[0].message.content;
 
     // Parse JSON from response
     let quest: Quest;
@@ -114,22 +113,15 @@ KEEP IT SHORT`;
 
       if (jsonMatch) {
         let jsonText = jsonMatch[1] || jsonMatch[0];
-        jsonText = jsonText.trim();
         quest = JSON.parse(jsonText);
       } else {
-        console.error('Failed to parse quest JSON:', questText.substring(0, 500));
-        throw new Error('Invalid JSON response from AI');
+        console.error('Failed to parse:', questText.substring(0, 500));
+        throw new Error('Invalid JSON from AI');
       }
     }
 
-    // Validate required fields
-    if (!quest.title || !quest.description || !quest.objectives || !quest.map || !quest.entities) {
-      throw new Error('Invalid quest structure - missing required fields');
-    }
-
-    // Validate map dimensions
-    if (!Array.isArray(quest.map.tiles) || quest.map.tiles.length === 0) {
-      throw new Error('Invalid map tiles');
+    if (!quest.title || !quest.map || !quest.entities) {
+      throw new Error('Invalid quest structure');
     }
 
     return res.status(200).json(quest);
