@@ -53,31 +53,30 @@ export default async function handler(
       throw new Error('GEMINI_API_KEY not configured');
     }
 
-    const systemPrompt = `You are a RPG quest generator for a pixel-art 2D game. Generate a quest based on this prompt: "${prompt}"
+    const systemPrompt = `Generate a RPG quest for: "${prompt}"
 
-Return ONLY valid JSON (NO markdown, NO code blocks) in this exact format:
+Return valid JSON (can be in markdown):
 {
-  "title": "Quest title in Italian",
-  "description": "Quest description in Italian (2-3 sentences)",
-  "objectives": ["objective 1 in Italian", "objective 2", "objective 3"],
+  "title": "Quest title in Italian (short)",
+  "description": "Quest description in Italian (1-2 sentences)",
+  "objectives": ["objective 1", "objective 2", "objective 3"],
   "map": {
-    "width": 20,
-    "height": 15,
-    "tiles": [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], ...repeat for 15 rows]
+    "width": 15,
+    "height": 10,
+    "tiles": [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], ...10 rows of 15 tiles each]
   },
   "entities": [
-    {"type": "player", "x": 5, "y": 5},
-    {"type": "enemy", "x": 10, "y": 8, "name": "Drago"},
-    {"type": "npc", "x": 3, "y": 3, "name": "Mercante"}
+    {"type": "player", "x": 2, "y": 5},
+    {"type": "enemy", "x": 12, "y": 5, "name": "Enemy Name"},
+    {"type": "npc", "x": 5, "y": 3, "name": "NPC Name"}
   ]
 }
 
-Tile types: 0=grass, 1=water, 2=mountain, 3=forest, 4=path
-Entity types: player, enemy, npc, item, treasure
-Map size: 20 columns x 15 rows (exact)
-Create varied terrain and place entities logically.`;
+Tiles: 0=grass, 1=water, 2=mountain, 3=forest, 4=path
+Types: player, enemy, npc, item
+Keep description SHORT to fit in JSON size limit.`;
 
-    // Call Google Gemini API directly (FREE tier with generous limits)
+    // Call Google Gemini API
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
       {
@@ -90,8 +89,8 @@ Create varied terrain and place entities logically.`;
             parts: [{ text: systemPrompt }]
           }],
           generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 3000,
+            temperature: 0.7,
+            maxOutputTokens: 4000,
           }
         }),
       }
@@ -106,29 +105,36 @@ Create varied terrain and place entities logically.`;
     const data = await response.json();
     const questText = data.candidates[0].content.parts[0].text;
 
-    // Parse JSON from response
+    // Parse JSON from response (handles markdown wrapping)
     let quest: Quest;
     try {
       // Try direct parse first
       quest = JSON.parse(questText);
     } catch (parseError) {
-      // Try to extract from markdown if wrapped
+      // Extract from markdown blocks
       const jsonMatch = questText.match(/```json\n?([\s\S]*?)\n?```/) ||
                        questText.match(/```\n?([\s\S]*?)\n?```/) ||
                        questText.match(/\{[\s\S]*\}/);
 
       if (jsonMatch) {
-        const jsonText = jsonMatch[1] || jsonMatch[0];
+        let jsonText = jsonMatch[1] || jsonMatch[0];
+        // Clean up any markdown artifacts
+        jsonText = jsonText.trim();
         quest = JSON.parse(jsonText);
       } else {
-        console.error('Failed to parse quest JSON:', questText);
+        console.error('Failed to parse quest JSON:', questText.substring(0, 500));
         throw new Error('Invalid JSON response from AI');
       }
     }
 
     // Validate required fields
     if (!quest.title || !quest.description || !quest.objectives || !quest.map || !quest.entities) {
-      throw new Error('Invalid quest structure');
+      throw new Error('Invalid quest structure - missing required fields');
+    }
+
+    // Validate map dimensions (be flexible, just check they exist)
+    if (!Array.isArray(quest.map.tiles) || quest.map.tiles.length === 0) {
+      throw new Error('Invalid map tiles');
     }
 
     return res.status(200).json(quest);
