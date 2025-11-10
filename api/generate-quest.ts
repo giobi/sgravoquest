@@ -60,9 +60,9 @@ Return JSON (Italian):
   "description": "Description (1 sentence)",
   "objectives": ["objective 1", "objective 2"],
   "map": {
-    "width": 50,
-    "height": 37,
-    "tiles": [[0,0,0,...], ...37 rows (50 cols each)]
+    "width": 10,
+    "height": 7,
+    "tiles": [[0,0,0,0,0,0,0,0,0,0], ...7 rows]
   },
   "entities": [
     {"type": "player", "x": 1, "y": 3},
