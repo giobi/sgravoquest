@@ -47,59 +47,60 @@ export default async function handler(
   }
 
   try {
-    const groqApiKey = process.env.GROQ_API_KEY;
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
     
-    if (!groqApiKey) {
-      throw new Error('GROQ_API_KEY not configured');
+    if (!openrouterKey) {
+      throw new Error('OPENROUTER_API_KEY not configured');
     }
 
-    // Call Groq API
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    // Call OpenRouter API with FREE Gemini Flash 1.5
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${groqApiKey}`,
+        'Authorization': `Bearer ${openrouterKey}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://sgravoquest.vercel.app',
+        'X-Title': 'SgravoQuest RPG Generator'
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'google/gemini-flash-1.5',  // FREE MODEL
         messages: [
           {
-            role: 'system',
-            content: `You are a RPG quest generator. Generate a quest based on user prompt.
+            role: 'user',
+            content: `You are a RPG quest generator for a pixel-art 2D game. Generate a quest based on this prompt: "${prompt}"
             
-Return ONLY valid JSON in this exact format:
+Return ONLY valid JSON (NO markdown, NO code blocks) in this exact format:
 {
-  "title": "Quest title",
-  "description": "Quest description (2-3 sentences)",
-  "objectives": ["objective 1", "objective 2", "objective 3"],
+  "title": "Quest title in Italian",
+  "description": "Quest description in Italian (2-3 sentences)",
+  "objectives": ["objective 1 in Italian", "objective 2", "objective 3"],
   "map": {
     "width": 20,
     "height": 15,
-    "tiles": [[0,0,0...], [0,1,0...], ...]
+    "tiles": [[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], ...repeat for 15 rows]
   },
   "entities": [
     {"type": "player", "x": 5, "y": 5},
-    {"type": "enemy", "x": 10, "y": 8, "name": "Dragon"},
-    {"type": "npc", "x": 3, "y": 3, "name": "Merchant"}
+    {"type": "enemy", "x": 10, "y": 8, "name": "Drago"},
+    {"type": "npc", "x": 3, "y": 3, "name": "Mercante"}
   ]
 }
 
 Tile types: 0=grass, 1=water, 2=mountain, 3=forest, 4=path
-Entity types: player, enemy, npc, item, treasure`
-          },
-          {
-            role: 'user',
-            content: prompt
+Entity types: player, enemy, npc, item, treasure
+Map size: 20 columns x 15 rows (exact)
+Create varied terrain and place entities logically.`
           }
         ],
         temperature: 0.8,
-        max_tokens: 2000
+        max_tokens: 3000
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.text();
-      throw new Error(`Groq API error: ${response.status} - ${errorData}`);
+      console.error('OpenRouter error:', errorData);
+      throw new Error(`OpenRouter API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -108,13 +109,26 @@ Entity types: player, enemy, npc, item, treasure`
     // Parse JSON from response
     let quest: Quest;
     try {
-      // Extract JSON if wrapped in markdown
-      const jsonMatch = questText.match(/```json\n?([\s\S]*?)\n?```/) || questText.match(/```\n?([\s\S]*?)\n?```/);
-      const jsonText = jsonMatch ? jsonMatch[1] : questText;
-      quest = JSON.parse(jsonText);
+      // Try direct parse first
+      quest = JSON.parse(questText);
     } catch (parseError) {
-      console.error('Failed to parse quest JSON:', questText);
-      throw new Error('Invalid JSON response from AI');
+      // Try to extract from markdown if wrapped
+      const jsonMatch = questText.match(/```json\n?([\s\S]*?)\n?```/) || 
+                       questText.match(/```\n?([\s\S]*?)\n?```/) ||
+                       questText.match(/\{[\s\S]*\}/);
+      
+      if (jsonMatch) {
+        const jsonText = jsonMatch[1] || jsonMatch[0];
+        quest = JSON.parse(jsonText);
+      } else {
+        console.error('Failed to parse quest JSON:', questText);
+        throw new Error('Invalid JSON response from AI');
+      }
+    }
+
+    // Validate required fields
+    if (!quest.title || !quest.description || !quest.objectives || !quest.map || !quest.entities) {
+      throw new Error('Invalid quest structure');
     }
 
     return res.status(200).json(quest);
