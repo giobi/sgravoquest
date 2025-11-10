@@ -48,7 +48,7 @@ export class TilemapRenderer {
   }
 
   /**
-   * Render a tilemap
+   * Render a tilemap with auto-scaling to fit canvas
    * @param map 2D array of tile indices
    */
   render(map: number[][]): void {
@@ -58,12 +58,23 @@ export class TilemapRenderer {
     const mapHeight = map.length
     const mapWidth = map[0]?.length || 0
 
+    // Calculate map dimensions in pixels
+    const mapPixelWidth = mapWidth * this.tileset.tileSize
+    const mapPixelHeight = mapHeight * this.tileset.tileSize
+
+    // Calculate scale to fit canvas (with small margin)
+    const canvasWidth = this.app.screen.width
+    const canvasHeight = this.app.screen.height
+    const scaleX = canvasWidth / mapPixelWidth
+    const scaleY = canvasHeight / mapPixelHeight
+    const scale = Math.min(scaleX, scaleY, 1) * 0.95 // 95% to leave margin
+
     // Render each tile
     for (let y = 0; y < mapHeight; y++) {
       for (let x = 0; x < mapWidth; x++) {
         const tileIndex = map[y][x]
 
-        // Skip empty tiles (index 0 or negative)
+        // Skip only negative indices (allow 0 for grass tile)
         if (tileIndex < 0) continue
 
         // Get tile texture
@@ -82,7 +93,17 @@ export class TilemapRenderer {
       }
     }
 
-    console.log(`🗺️  Tilemap rendered: ${mapWidth}x${mapHeight} tiles`)
+    // Apply scaling
+    this.container.scale.set(scale)
+
+    // Center in canvas
+    const scaledWidth = mapPixelWidth * scale
+    const scaledHeight = mapPixelHeight * scale
+    this.container.x = (canvasWidth - scaledWidth) / 2
+    this.container.y = (canvasHeight - scaledHeight) / 2
+
+    const scalePercent = Math.round(scale * 100)
+    console.log(`🗺️  Tilemap rendered: ${mapWidth}x${mapHeight} tiles, scale: ${scalePercent}%`)
   }
 
   /**
