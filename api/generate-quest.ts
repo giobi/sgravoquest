@@ -124,7 +124,9 @@ Tiles: 0=grass 1=water 2=mountain 3=forest 4=path`;
       throw new Error('Invalid quest structure');
     }
 
-    return res.status(200).json(quest);
+    // Transform map to maps array for frontend
+    const { map, ...questData } = quest;
+    return res.status(200).json({ ...questData, maps: [map] });
 
   } catch (error) {
     console.error('Quest generation error:', error);
