@@ -47,28 +47,14 @@ export default async function handler(
   }
 
   try {
-    const openrouterKey = process.env.OPENROUTER_API_KEY;
-    
-    if (!openrouterKey) {
-      throw new Error('OPENROUTER_API_KEY not configured');
+    const geminiKey = process.env.GEMINI_API_KEY;
+
+    if (!geminiKey) {
+      throw new Error('GEMINI_API_KEY not configured');
     }
 
-    // Call OpenRouter API with FREE Gemini Flash 1.5
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openrouterKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://sgravoquest.vercel.app',
-        'X-Title': 'SgravoQuest RPG Generator'
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-flash-1.5',  // FREE MODEL
-        messages: [
-          {
-            role: 'user',
-            content: `You are a RPG quest generator for a pixel-art 2D game. Generate a quest based on this prompt: "${prompt}"
-            
+    const systemPrompt = `You are a RPG quest generator for a pixel-art 2D game. Generate a quest based on this prompt: "${prompt}"
+
 Return ONLY valid JSON (NO markdown, NO code blocks) in this exact format:
 {
   "title": "Quest title in Italian",
@@ -89,22 +75,36 @@ Return ONLY valid JSON (NO markdown, NO code blocks) in this exact format:
 Tile types: 0=grass, 1=water, 2=mountain, 3=forest, 4=path
 Entity types: player, enemy, npc, item, treasure
 Map size: 20 columns x 15 rows (exact)
-Create varied terrain and place entities logically.`
+Create varied terrain and place entities logically.`;
+
+    // Call Google Gemini API directly (FREE tier with generous limits)
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: systemPrompt }]
+          }],
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 3000,
           }
-        ],
-        temperature: 0.8,
-        max_tokens: 3000
-      }),
-    });
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('OpenRouter error:', errorData);
-      throw new Error(`OpenRouter API error: ${response.status}`);
+      console.error('Gemini API error:', errorData);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const questText = data.choices[0].message.content;
+    const questText = data.candidates[0].content.parts[0].text;
 
     // Parse JSON from response
     let quest: Quest;
@@ -113,10 +113,10 @@ Create varied terrain and place entities logically.`
       quest = JSON.parse(questText);
     } catch (parseError) {
       // Try to extract from markdown if wrapped
-      const jsonMatch = questText.match(/```json\n?([\s\S]*?)\n?```/) || 
+      const jsonMatch = questText.match(/```json\n?([\s\S]*?)\n?```/) ||
                        questText.match(/```\n?([\s\S]*?)\n?```/) ||
                        questText.match(/\{[\s\S]*\}/);
-      
+
       if (jsonMatch) {
         const jsonText = jsonMatch[1] || jsonMatch[0];
         quest = JSON.parse(jsonText);
@@ -135,7 +135,7 @@ Create varied terrain and place entities logically.`
 
   } catch (error) {
     console.error('Quest generation error:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Failed to generate quest',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
