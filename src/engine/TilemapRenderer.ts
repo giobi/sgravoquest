@@ -9,7 +9,7 @@ import { TilesetAsset } from '../assets/asset-catalog'
 export class TilemapRenderer {
   private app: Application
   private tileset: TilesetAsset
-  private container: Container
+  public container: Container  // PUBLIC: Player needs to be added here
   private tileTextures: Texture[] = []
 
   constructor(app: Application, tileset: TilesetAsset) {

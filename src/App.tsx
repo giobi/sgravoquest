@@ -11,12 +11,26 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [currentQuest, setCurrentQuest] = useState<Quest | null>(null)
 
+  // Pool di prompt diversi per varietà
+  const questPrompts = [
+    'Un ladro deve infiltrarsi in una cripta antica per rubare un artefatto maledetto',
+    'Un mago esplora una torre abbandonata piena di esperimenti andati male',
+    'Un cavaliere cerca il santo graal nelle profondità di un tempio sommerso',
+    'Un assassino deve eliminare il capo di una gilda di necromanti',
+    'Un esploratore scopre rovine di una civiltà perduta nella giungla',
+    'Un cacciatore di mostri affronta un vampiro nel suo castello',
+    'Un alchimista cerca ingredienti rari in una miniera infestata da goblin',
+    'Un paladino deve purificare un santuario corrotto dal male',
+    'Un bardo raccoglie storie in una taverna maledetta',
+    'Un druido protegge una foresta sacra da cultisti oscuri'
+  ]
+
   const generateQuest = async () => {
     setIsGenerating(true)
 
     try {
-      // Call backend API proxy (sicuro!)
-      
+      // Pick random prompt for variety
+      const randomPrompt = questPrompts[Math.floor(Math.random() * questPrompts.length)]
 
       const response = await fetch("/api/generate-quest", {
         method: 'POST',
@@ -24,7 +38,7 @@ function App() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          prompt: 'Un giovane guerriero deve salvare il villaggio da un drago che terrorizza la popolazione'
+          prompt: randomPrompt
         })
       })
 

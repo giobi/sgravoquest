@@ -52,32 +52,49 @@ export default async function handler(
       throw new Error('OPENROUTER_API_KEY not configured');
     }
 
-    const systemPrompt = `Generate RPG dungeon quest: "${prompt}"
+    const systemPrompt = `Generate an RPG dungeon quest based on: "${prompt}"
 
-Return JSON (Italian):
+CRITICAL: Return ONLY valid JSON in Italian. NO markdown, NO explanations.
+
+MAP SIZE: EXACTLY 30 columns x 20 rows. Each row must have 30 numbers. The tiles array must have 20 rows.
+
+TILE VALUES from tiny-dungeon tileset:
+- 0 = floor (light stone - WALKABLE)
+- 1 = floor variant (dark stone - WALKABLE)
+- 12 = wall (gray brick - SOLID, use for borders and obstacles)
+- 24 = floor variant (orange - WALKABLE)
+- 36 = decoration (barrel/crate - for visual interest)
+
+DESIGN GUIDELINES:
+- Create INTERESTING layouts with multiple rooms connected by corridors
+- Border the entire map with walls (12)
+- Add interior walls to create rooms and passages
+- Scatter decorations (36) for visual variety
+- Place player start position away from enemies
+- Place 2-4 enemies in different areas
+
+JSON FORMAT:
 {
-  "title": "Quest title",
-  "description": "Description (1 sentence)",
-  "objectives": ["objective 1", "objective 2"],
+  "title": "Creative Italian Title",
+  "description": "Atmospheric description in Italian (2-3 sentences)",
+  "objectives": ["Objective 1", "Objective 2", "Objective 3"],
   "map": {
-    "width": 10,
-    "height": 7,
-    "tiles": [[24,24,24,24,24,24,24,24,24,24], ...7 rows total]
+    "width": 30,
+    "height": 20,
+    "tiles": [
+      [12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12],
+      [12,0,0,0,0,0,0,0,0,0,12,12,12,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,12],
+      ... (20 rows total, each with 30 elements)
+    ],
+    "startPosition": {"x": 2, "y": 2}
   },
   "entities": [
-    {"type": "player", "x": 1, "y": 3},
-    {"type": "enemy", "x": 8, "y": 4, "name": "Name"}
+    {"type": "player", "x": 2, "y": 2},
+    {"type": "npc", "x": 10, "y": 5, "name": "NPC Name"},
+    {"type": "enemy", "x": 20, "y": 10, "name": "Enemy Name"},
+    {"type": "enemy", "x": 25, "y": 15, "name": "Another Enemy"}
   ]
-}
-
-IMPORTANT - Tile indices from tiny-dungeon tileset:
-24=floor (orange/brown stone - WALKABLE)
-12=wall (gray brick - SOLID OBSTACLE)
-28=decorative floor variant
-29=special floor tile
-
-Use tiles 24 (floor), 12 (wall), 28-29 (decorations).
-Create room with walls (12) on borders, floor (24) inside.`;
+}`;
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -88,10 +105,10 @@ Create room with walls (12) on borders, floor (24) inside.`;
         'X-Title': 'SgravoQuest'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3-haiku',
+        model: 'anthropic/claude-3.5-haiku',  // Upgraded for larger maps
         messages: [{ role: 'user', content: systemPrompt }],
-        temperature: 0.6,
-        max_tokens: 2500
+        temperature: 0.7,
+        max_tokens: 8000  // 30x20 map needs more tokens
       }),
     });
 
