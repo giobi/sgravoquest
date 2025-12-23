@@ -149,9 +149,16 @@ JSON FORMAT:
       throw new Error('Invalid quest structure');
     }
 
-    // Transform map to maps array for frontend
+    // Extract player position from entities for startPosition
+    const playerEntity = quest.entities.find((e: any) => e.type === 'player');
+    const startPosition = playerEntity
+      ? { x: playerEntity.x, y: playerEntity.y }
+      : { x: 2, y: 2 }; // fallback
+
+    // Transform map to maps array for frontend with startPosition
     const { map, ...questData } = quest;
-    return res.status(200).json({ ...questData, maps: [map] });
+    const mapWithStart = { ...map, startPosition };
+    return res.status(200).json({ ...questData, maps: [mapWithStart] });
 
   } catch (error) {
     console.error('Quest generation error:', error);
