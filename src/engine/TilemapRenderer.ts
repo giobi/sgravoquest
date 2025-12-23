@@ -9,13 +9,22 @@ import { TilesetAsset } from '../assets/asset-catalog'
 export class TilemapRenderer {
   private app: Application
   private tileset: TilesetAsset
-  public container: Container  // PUBLIC: Player needs to be added here
+  public container: Container  // Root container (scaled/centered)
+  private tilesContainer: Container  // Just for tiles (cleared on re-render)
+  public entityLayer: Container  // For player/NPCs (not cleared)
   private tileTextures: Texture[] = []
 
   constructor(app: Application, tileset: TilesetAsset) {
     this.app = app
     this.tileset = tileset
     this.container = new Container()
+    this.tilesContainer = new Container()
+    this.entityLayer = new Container()
+
+    // Add layers in order: tiles first, then entities on top
+    this.container.addChild(this.tilesContainer)
+    this.container.addChild(this.entityLayer)
+
     this.app.stage.addChild(this.container)
   }
 
@@ -52,8 +61,8 @@ export class TilemapRenderer {
    * @param map 2D array of tile indices
    */
   render(map: number[][]): void {
-    // Clear existing tiles
-    this.container.removeChildren()
+    // Clear only tiles, not entities
+    this.tilesContainer.removeChildren()
 
     const mapHeight = map.length
     const mapWidth = map[0]?.length || 0
@@ -89,7 +98,7 @@ export class TilemapRenderer {
         sprite.x = x * this.tileset.tileSize
         sprite.y = y * this.tileset.tileSize
 
-        this.container.addChild(sprite)
+        this.tilesContainer.addChild(sprite)
       }
     }
 

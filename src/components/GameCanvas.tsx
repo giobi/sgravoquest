@@ -74,8 +74,8 @@ function GameCanvas({ width, height, quest }: GameCanvasProps) {
       })
       playerRef.current = player
 
-      // Add player to tilemap container so it moves/scales with the map
-      tilemapRenderer.container.addChild(player.container)
+      // Add player to entity layer (not cleared when map re-renders)
+      tilemapRenderer.entityLayer.addChild(player.container)
 
       // Setup input
       const inputManager = new InputManager()
