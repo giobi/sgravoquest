@@ -22,22 +22,36 @@ function GameCanvas({ width, height, quest }: GameCanvasProps) {
   useEffect(() => {
     if (!canvasRef.current) return
 
-    // Inizializza Pixi.js Application
-    const app = new Application()
-    appRef.current = app
+    let cancelled = false
+    let app: Application | null = null
+    let inputManager: InputManager | null = null
 
     const initGame = async () => {
-      await app.init({
-        width,
-        height,
-        backgroundColor: 0x000000,
-        antialias: false
-      })
+      // Inizializza Pixi.js Application
+      app = new Application()
+
+      try {
+        await app.init({
+          width,
+          height,
+          backgroundColor: 0x1a1a2e,
+          antialias: false
+        })
+      } catch (error) {
+        console.error('Failed to init Pixi.js:', error)
+        return
+      }
+
+      // Check if component was unmounted during async init
+      if (cancelled || !canvasRef.current) {
+        app.destroy(true)
+        return
+      }
+
+      appRef.current = app
 
       // Aggiungi canvas al DOM
-      if (canvasRef.current) {
-        canvasRef.current.appendChild(app.canvas)
-      }
+      canvasRef.current.appendChild(app.canvas)
 
       // Carica tileset dalla CDN
       const tileset = getTileset('tiny-dungeon')
@@ -48,7 +62,16 @@ function GameCanvas({ width, height, quest }: GameCanvasProps) {
 
       // Crea renderer tilemap
       const tilemapRenderer = new TilemapRenderer(app, tileset)
-      await tilemapRenderer.load()
+
+      try {
+        await tilemapRenderer.load()
+      } catch (error) {
+        console.error('Failed to load tileset:', error)
+        return
+      }
+
+      if (cancelled) return
+
       tilemapRendererRef.current = tilemapRenderer
 
       // Crea una semplice mappa di test iniziale
@@ -63,7 +86,15 @@ function GameCanvas({ width, height, quest }: GameCanvasProps) {
         return
       }
 
-      const heroTexture = await Assets.load(heroSprite.url)
+      let heroTexture
+      try {
+        heroTexture = await Assets.load(heroSprite.url)
+      } catch (error) {
+        console.error('Failed to load hero sprite:', error)
+        return
+      }
+
+      if (cancelled) return
 
       // Crea player
       const player = new Player({
@@ -78,15 +109,16 @@ function GameCanvas({ width, height, quest }: GameCanvasProps) {
       tilemapRenderer.entityLayer.addChild(player.container)
 
       // Setup input
-      const inputManager = new InputManager()
+      inputManager = new InputManager()
 
       // Game loop
       app.ticker.add(() => {
+        if (cancelled) return
         // Update player position (smooth movement)
         player.update()
 
         // Handle input (only when not moving)
-        const { dx, dy } = inputManager.getMovementDirection()
+        const { dx, dy } = inputManager!.getMovementDirection()
         if (dx !== 0 || dy !== 0) {
           player.move(dx, dy, currentMapRef.current)
         }
@@ -101,9 +133,20 @@ function GameCanvas({ width, height, quest }: GameCanvasProps) {
 
     // Cleanup
     return () => {
-      if (appRef.current) {
-        appRef.current.destroy(true, { children: true })
+      cancelled = true
+      if (inputManager) {
+        inputManager.destroy()
       }
+      if (appRef.current) {
+        try {
+          appRef.current.destroy(true, { children: true })
+        } catch (e) {
+          // Ignore destroy errors during cleanup
+        }
+        appRef.current = null
+      }
+      tilemapRendererRef.current = null
+      playerRef.current = null
     }
   }, [width, height])
 
