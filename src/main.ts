@@ -4,6 +4,12 @@ import { BedroomScene } from "./scenes/BedroomScene";
 import { LakefrontScene } from "./scenes/LakefrontScene";
 import { BattleScene } from "./scenes/BattleScene";
 
+// Risoluzione interna FISSA: tutto è authorato qui dentro e scalato in blocco.
+// 480x270 (16:9) → ×4 = 1920×1080 esatto. pixelaggio determinato e coerente
+// fra overworld (tile 32px, zoom 1) e battaglia (stesse coordinate base).
+export const GAME_W = 480;
+export const GAME_H = 270;
+
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: "game",
@@ -11,10 +17,10 @@ const config: Phaser.Types.Core.GameConfig = {
   pixelArt: true,
   roundPixels: true,
   scale: {
-    mode: Phaser.Scale.RESIZE,
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 800,
-    height: 600,
+    width: GAME_W,
+    height: GAME_H,
   },
   scene: [BootScene, BedroomScene, LakefrontScene, BattleScene],
 };

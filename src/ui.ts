@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 
-/** Finestra di testo stile Pokémon, fissata alla camera. */
+/** Finestra di testo stile Pokémon, fissata alla camera. Misurata sulla base interna. */
 export class DialogBox {
   private box: Phaser.GameObjects.Graphics;
   private text: Phaser.GameObjects.Text;
@@ -9,23 +9,23 @@ export class DialogBox {
   constructor(scene: Phaser.Scene) {
     const w = scene.scale.width;
     const h = scene.scale.height;
-    const bw = w - 24;
-    const bh = 70;
-    const x = 12;
-    const y = h - bh - 12;
+    const bw = w - 12;
+    const bh = 44;
+    const x = 6;
+    const y = h - bh - 6;
 
     this.box = scene.add.graphics();
     this.box.fillStyle(0x1a1a2e, 0.95);
-    this.box.fillRoundedRect(0, 0, bw, bh, 8);
-    this.box.lineStyle(3, 0xf8f8f8, 1);
-    this.box.strokeRoundedRect(0, 0, bw, bh, 8);
+    this.box.fillRoundedRect(0, 0, bw, bh, 5);
+    this.box.lineStyle(2, 0xf8f8f8, 1);
+    this.box.strokeRoundedRect(0, 0, bw, bh, 5);
 
-    this.text = scene.add.text(14, 12, "", {
+    this.text = scene.add.text(8, 8, "", {
       fontFamily: "monospace",
-      fontSize: "15px",
+      fontSize: "10px",
       color: "#f8f8f8",
-      wordWrap: { width: bw - 28 },
-      lineSpacing: 4,
+      wordWrap: { width: bw - 16 },
+      lineSpacing: 3,
     });
 
     this.container = scene.add.container(x, y, [this.box, this.text]).setScrollFactor(0).setDepth(1000);
@@ -42,10 +42,11 @@ export class DialogBox {
   }
 }
 
-/** Menu orizzontale di scelte (FIGHT / RUN ...). */
+/** Menu verticale di scelte (LOTTA / FUGGI ...). */
 export class ChoiceMenu {
   private container: Phaser.GameObjects.Container;
   private items: Phaser.GameObjects.Text[] = [];
+  private labels: string[];
   private cursor = 0;
   private onSelect: (index: number) => void;
   private keys: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -55,24 +56,25 @@ export class ChoiceMenu {
 
   constructor(scene: Phaser.Scene, labels: string[], onSelect: (index: number) => void) {
     this.onSelect = onSelect;
+    this.labels = labels;
     const w = scene.scale.width;
     const h = scene.scale.height;
-    const bw = 150;
-    const bh = 70;
-    const x = w - bw - 12;
-    const y = h - bh - 12;
+    const bw = 92;
+    const bh = 44;
+    const x = w - bw - 6;
+    const y = h - bh - 6;
 
     const g = scene.add.graphics();
     g.fillStyle(0x1a1a2e, 0.97);
-    g.fillRoundedRect(0, 0, bw, bh, 8);
-    g.lineStyle(3, 0xf8f8f8, 1);
-    g.strokeRoundedRect(0, 0, bw, bh, 8);
+    g.fillRoundedRect(0, 0, bw, bh, 5);
+    g.lineStyle(2, 0xf8f8f8, 1);
+    g.strokeRoundedRect(0, 0, bw, bh, 5);
 
     this.container = scene.add.container(x, y, [g]).setScrollFactor(0).setDepth(1001);
     labels.forEach((label, i) => {
-      const t = scene.add.text(28, 12 + i * 22, label, {
+      const t = scene.add.text(16, 8 + i * 16, label, {
         fontFamily: "monospace",
-        fontSize: "15px",
+        fontSize: "10px",
         color: "#f8f8f8",
       });
       this.items.push(t);
@@ -97,7 +99,7 @@ export class ChoiceMenu {
   }
 
   private redraw(): void {
-    this.items.forEach((t, i) => t.setText((i === this.cursor ? "▶ " : "  ") + t.text.replace(/^[▶ ] /, "")));
+    this.items.forEach((t, i) => t.setText((i === this.cursor ? "▶" : " ") + this.labels[i]));
   }
 
   update(): void {

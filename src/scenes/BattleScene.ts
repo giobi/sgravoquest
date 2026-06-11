@@ -16,6 +16,10 @@ export class BattleScene extends Phaser.Scene {
   private busy = false;
   private over = false;
 
+  // geometria box HP (coordinate base) — condivisa fra draw e refresh
+  private readonly EB = { x: 8, y: 10, w: 150, h: 30 };
+  private PB = { x: 0, y: 0, w: 150, h: 36 };
+
   constructor() {
     super("battle");
   }
@@ -23,29 +27,28 @@ export class BattleScene extends Phaser.Scene {
   create(): void {
     const W = this.scale.width;
     const H = this.scale.height;
+    this.PB = { x: W - 158, y: H - 96, w: 150, h: 36 };
 
     // sfondo
     const g = this.add.graphics();
     g.fillGradientStyle(0x8ecae6, 0x8ecae6, 0xcdeefc, 0xcdeefc, 1);
-    g.fillRect(0, 0, W, H - 90);
-    g.fillStyle(0x9bcd6b, 1).fillRect(0, H - 140, W, 60);
+    g.fillRect(0, 0, W, H - 46);
+    g.fillStyle(0x9bcd6b, 1).fillRect(0, H - 70, W, 24);
     // piattaforme
     g.fillStyle(0x7bb05a, 1);
-    g.fillEllipse(W - 130, 150, 200, 50);
-    g.fillEllipse(150, H - 150, 240, 60);
+    g.fillEllipse(W - 92, 92, 110, 26);
+    g.fillEllipse(96, H - 88, 130, 30);
 
-    // mostri
-    this.enemySprite = this.add.image(W - 130, 120, "magikarp").setScale(1.7);
-    this.playerSprite = this.add.image(150, H - 185, "charmander-back").setScale(2.0);
+    // mostri (stessa densità pixel dell'overworld: niente scale spropositati)
+    this.enemySprite = this.add.image(W - 92, 72, "magikarp").setScale(0.62);
+    this.playerSprite = this.add.image(96, H - 104, "charmander-back").setScale(0.78);
 
-    // box HP nemico (in alto a sx)
-    this.drawHPBox(20, 24, "MAGIKARP selvatico", 5, false);
+    this.drawHPBox(this.EB.x, this.EB.y, this.EB.w, this.EB.h, "MAGIKARP selv.", 5);
     this.enemyBar = this.add.graphics();
-    // box HP player (in basso a dx)
-    this.drawHPBox(W - 250, H - 200, "CHARMANDER", 6, true);
+    this.drawHPBox(this.PB.x, this.PB.y, this.PB.w, this.PB.h, "CHARMANDER", 6);
     this.playerBar = this.add.graphics();
-    this.playerHpText = this.add.text(W - 60, H - 165, "", {
-      fontFamily: "monospace", fontSize: "12px", color: "#1a1a2e",
+    this.playerHpText = this.add.text(this.PB.x + this.PB.w - 6, this.PB.y + this.PB.h - 12, "", {
+      fontFamily: "monospace", fontSize: "9px", color: "#1a1a2e",
     }).setOrigin(1, 0);
 
     this.refreshBars();
@@ -54,34 +57,30 @@ export class BattleScene extends Phaser.Scene {
     this.menu = new ChoiceMenu(this, ["LOTTA", "FUGGI"], (i) => this.onChoice(i));
 
     this.dialog.show("Un MAGIKARP selvatico è apparso!");
-    this.tweens.add({ targets: this.enemySprite, y: "-=8", duration: 500, yoyo: true, repeat: -1 });
+    this.tweens.add({ targets: this.enemySprite, y: "-=4", duration: 500, yoyo: true, repeat: -1 });
     this.time.delayedCall(1600, () => this.dialog.show("Cosa deve fare CHARMANDER?"));
     this.time.delayedCall(1700, () => this.menu.show());
   }
 
-  private drawHPBox(x: number, y: number, name: string, lvl: number, player: boolean): void {
-    const w = 230, h = player ? 56 : 46;
+  private drawHPBox(x: number, y: number, w: number, h: number, name: string, lvl: number): void {
     const g = this.add.graphics();
-    g.fillStyle(0xf8f8e8, 0.97).fillRoundedRect(x, y, w, h, 6);
-    g.lineStyle(2, 0x2a2a3a, 1).strokeRoundedRect(x, y, w, h, 6);
-    this.add.text(x + 10, y + 6, name, { fontFamily: "monospace", fontSize: "13px", color: "#1a1a2e" });
-    this.add.text(x + w - 38, y + 6, "Lv" + lvl, { fontFamily: "monospace", fontSize: "12px", color: "#1a1a2e" });
-    this.add.text(x + 10, y + 24, "HP", { fontFamily: "monospace", fontSize: "11px", color: "#d08a00" });
+    g.fillStyle(0xf8f8e8, 0.97).fillRoundedRect(x, y, w, h, 4);
+    g.lineStyle(1.5, 0x2a2a3a, 1).strokeRoundedRect(x, y, w, h, 4);
+    this.add.text(x + 6, y + 4, name, { fontFamily: "monospace", fontSize: "9px", color: "#1a1a2e" });
+    this.add.text(x + w - 26, y + 4, "Lv" + lvl, { fontFamily: "monospace", fontSize: "9px", color: "#1a1a2e" });
+    this.add.text(x + 6, y + 16, "HP", { fontFamily: "monospace", fontSize: "8px", color: "#d08a00" });
   }
 
   private refreshBars(): void {
-    const draw = (bar: Phaser.GameObjects.Graphics, x: number, y: number, hp: number, max: number) => {
+    const draw = (bar: Phaser.GameObjects.Graphics, x: number, y: number, w: number, hp: number, max: number) => {
       bar.clear();
-      const bw = 150;
-      bar.fillStyle(0x444444, 1).fillRoundedRect(x, y, bw, 8, 3);
+      bar.fillStyle(0x444444, 1).fillRoundedRect(x, y, w, 6, 2);
       const ratio = Math.max(0, hp / max);
       const col = ratio > 0.5 ? 0x46d160 : ratio > 0.2 ? 0xf2c037 : 0xe5484d;
-      bar.fillStyle(col, 1).fillRoundedRect(x, y, bw * ratio, 8, 3);
+      bar.fillStyle(col, 1).fillRoundedRect(x, y, w * ratio, 6, 2);
     };
-    const W = this.scale.width;
-    const H = this.scale.height;
-    draw(this.enemyBar, 20 + 60, 24 + 24, this.enemyHP, this.enemyMax);
-    draw(this.playerBar, W - 250 + 60, H - 200 + 24, this.playerHP, this.playerMax);
+    draw(this.enemyBar, this.EB.x + 26, this.EB.y + 16, this.EB.w - 34, this.enemyHP, this.enemyMax);
+    draw(this.playerBar, this.PB.x + 26, this.PB.y + 16, this.PB.w - 34, this.playerHP, this.playerMax);
     this.playerHpText.setText(`${Math.max(0, this.playerHP)}/${this.playerMax}`);
   }
 
@@ -100,7 +99,7 @@ export class BattleScene extends Phaser.Scene {
   private playerAttack(): void {
     this.busy = true;
     this.dialog.show("CHARMANDER usa GRAFFIO!");
-    this.tweens.add({ targets: this.playerSprite, x: "+=30", duration: 120, yoyo: true });
+    this.tweens.add({ targets: this.playerSprite, x: "+=14", duration: 120, yoyo: true });
     this.time.delayedCall(500, () => {
       const dmg = 9 + Math.floor(Math.random() * 7);
       this.enemyHP -= dmg;
@@ -108,7 +107,7 @@ export class BattleScene extends Phaser.Scene {
       this.refreshBars();
       if (this.enemyHP <= 0) {
         this.dialog.show("MAGIKARP selvatico è esausto!");
-        this.tweens.add({ targets: this.enemySprite, y: "+=40", alpha: 0, duration: 600 });
+        this.tweens.add({ targets: this.enemySprite, y: "+=24", alpha: 0, duration: 600 });
         this.time.delayedCall(1500, () => {
           this.dialog.show("Hai vinto! (e non hai imparato niente di utile)");
           this.time.delayedCall(1800, () => this.endBattle());
@@ -121,7 +120,7 @@ export class BattleScene extends Phaser.Scene {
 
   private enemyTurn(): void {
     this.dialog.show("MAGIKARP usa SPLASH!");
-    this.tweens.add({ targets: this.enemySprite, x: "-=20", duration: 100, yoyo: true });
+    this.tweens.add({ targets: this.enemySprite, x: "-=10", duration: 100, yoyo: true });
     this.time.delayedCall(1100, () => {
       this.dialog.show("Ma non succede nulla!");
       this.time.delayedCall(1300, () => {

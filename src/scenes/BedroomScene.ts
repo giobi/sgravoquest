@@ -4,7 +4,7 @@ import { DialogBox } from "../ui";
 
 const TS = 32;
 const COLS = 10;
-const ROWS = 9;
+const ROWS = 8;
 const DOOR_X = 5;
 const DOOR_Y = ROWS - 1;
 
@@ -69,7 +69,7 @@ export class BedroomScene extends Phaser.Scene {
     this.player.facing = "down";
 
     this.cameras.main.setBackgroundColor("#0b0e14");
-    this.cameras.main.setZoom(2.2);
+    this.cameras.main.setZoom(1);
     this.cameras.main.centerOn(W / 2, H / 2);
 
     this.add.text(W / 2, -10, "Cameretta — Pallanza", {
