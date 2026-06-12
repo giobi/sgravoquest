@@ -7,8 +7,11 @@ import { BattleScene } from "./scenes/BattleScene";
 // Risoluzione interna FISSA: tutto è authorato qui dentro e scalato in blocco.
 // 480x270 (16:9) → ×4 = 1920×1080 esatto. pixelaggio determinato e coerente
 // fra overworld (tile 32px, zoom 1) e battaglia (stesse coordinate base).
-export const GAME_W = 480;
-export const GAME_H = 270;
+// override via URL per tarare lo zoom: ?res=640x360 (default 480x270)
+const _p = new URLSearchParams(location.search).get("res");
+const _m = _p && /^\d+x\d+$/.test(_p) ? _p.split("x").map(Number) : [640, 360];
+export const GAME_W = _m[0];
+export const GAME_H = _m[1];
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
