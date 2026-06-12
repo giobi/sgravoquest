@@ -3,9 +3,9 @@ import { GridPlayer } from "../GridPlayer";
 import { DialogBox } from "../ui";
 
 const TS = 32;
-const COLS = 10;
+const COLS = 14;
 const ROWS = 8;
-const DOOR_X = 5;
+const DOOR_X = 7;
 const DOOR_Y = ROWS - 1;
 
 export class BedroomScene extends Phaser.Scene {
@@ -37,16 +37,23 @@ export class BedroomScene extends Phaser.Scene {
     // battiscopa
     g.fillStyle(0x6e573d, 1).fillRect(TS, TS, W - TS * 2, 4);
 
-    // Finestra sul muro alto
-    g.fillStyle(0x8ecae6, 1).fillRect(TS * 3, 6, TS * 2, TS - 12);
-    g.lineStyle(3, 0xe9edf0, 1).strokeRect(TS * 3, 6, TS * 2, TS - 12);
-    g.lineBetween(TS * 4, 6, TS * 4, TS - 6);
+    // Finestra sul muro alto (centrata)
+    const winX = Math.round((W - TS * 2) / 2);
+    g.fillStyle(0x8ecae6, 1).fillRect(winX, 6, TS * 2, TS - 12);
+    g.lineStyle(3, 0xe9edf0, 1).strokeRect(winX, 6, TS * 2, TS - 12);
+    g.lineBetween(winX + TS, 6, winX + TS, TS - 6);
 
     // Letto (top-left, 2 tile)
     const bx = TS, by = TS;
     g.fillStyle(0x9c3a3a, 1).fillRect(bx + 2, by + 2, TS * 2 - 4, TS * 2 - 4); // coperta
     g.fillStyle(0xf4f1de, 1).fillRect(bx + 4, by + 4, TS * 2 - 8, TS - 6); // cuscino
     g.lineStyle(2, 0x6e2828, 1).strokeRect(bx + 2, by + 2, TS * 2 - 4, TS * 2 - 4);
+
+    // Scrivania + PC sul lato destro (riempie la stanza larga)
+    const dx = (COLS - 3) * TS;
+    g.fillStyle(0x7a5230, 1).fillRect(dx, TS + 4, TS * 2, TS - 6);
+    g.fillStyle(0x2a2a3a, 1).fillRect(dx + TS - 8, TS - 6, 16, 14); // monitor
+    g.fillStyle(0x46d160, 1).fillRect(dx + TS - 6, TS - 4, 12, 10); // schermo
 
     // Tappeto
     g.fillStyle(0x3a6ea5, 0.7).fillEllipse(W / 2, H / 2 + 8, TS * 3, TS * 2);
@@ -62,14 +69,17 @@ export class BedroomScene extends Phaser.Scene {
       if (tx === DOOR_X && ty === DOOR_Y) return false; // porta calpestabile
       if (tx <= 0 || ty <= 0 || tx >= COLS - 1 || ty >= ROWS - 1) return true; // muri
       if (tx >= 1 && tx <= 2 && ty >= 1 && ty <= 2) return true; // letto
+      if (tx >= COLS - 3 && tx <= COLS - 2 && ty === 1) return true; // scrivania
       return false;
     };
 
-    this.player = new GridPlayer(this, TS, 5, 3, blocked, (tx, ty) => this.onTile(tx, ty));
+    this.player = new GridPlayer(this, TS, 7, 3, blocked, (tx, ty) => this.onTile(tx, ty));
     this.player.facing = "down";
 
+    // zoom dinamico: la stanza riempie la viewport (interno piccolo non si perde nel nero)
     this.cameras.main.setBackgroundColor("#0b0e14");
-    this.cameras.main.setZoom(1);
+    const zoom = Math.min(this.scale.width / W, this.scale.height / H);
+    this.cameras.main.setZoom(zoom);
     this.cameras.main.centerOn(W / 2, H / 2);
 
     this.add.text(W / 2, -10, "Cameretta — Pallanza", {
