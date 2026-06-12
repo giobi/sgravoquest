@@ -9,31 +9,25 @@ export class BootScene extends Phaser.Scene {
   preload(): void {
     const w = this.scale.width;
     const h = this.scale.height;
-    this.add.text(w / 2, h / 2 - 20, "SgravoQuest", {
-      fontFamily: "monospace",
-      fontSize: "28px",
+    this.add.text(w / 2, h / 2 - 18, "SgravoQuest", {
+      fontFamily: "Trebuchet MS, Verdana, sans-serif",
+      fontSize: "30px",
       color: "#e6edf3",
     }).setOrigin(0.5);
     const bar = this.add.text(w / 2, h / 2 + 16, "caricamento...", {
-      fontFamily: "monospace",
+      fontFamily: "Trebuchet MS, Verdana, sans-serif",
       fontSize: "13px",
-      color: "#6e7681",
+      color: "#8a93a3",
     }).setOrigin(0.5);
     this.load.on("progress", (p: number) => bar.setText(`caricamento... ${Math.round(p * 100)}%`));
 
-    // Overworld
-    this.load.image("tux-tiles", "assets/tiles/tuxmon-sample-32px-extruded.png");
-    this.load.atlas("misa", "assets/sprites/misa-atlas.png", "assets/sprites/misa-atlas.json");
-
-    // Mostri (Pokémon veri da PokeAPI)
-    this.load.image("magikarp", "assets/monsters/magikarp-front.png");
+    // Mostri: official artwork (smooth, non pixel) da PokeAPI
     this.load.image("magikarp-art", "assets/monsters/magikarp-art.png");
-    this.load.image("charmander-back", "assets/monsters/charmander-back.png");
-    this.load.image("charmander-front", "assets/monsters/charmander-front.png");
+    this.load.image("charmander-art", "assets/monsters/charmander-art.png");
   }
 
   create(): void {
-    GridPlayer.createAnims(this);
+    GridPlayer.ensureTextures(this);
     this.scene.start("bedroom");
   }
 }

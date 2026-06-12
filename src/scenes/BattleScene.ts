@@ -39,16 +39,16 @@ export class BattleScene extends Phaser.Scene {
     g.fillEllipse(W - 92, 92, 110, 26);
     g.fillEllipse(96, H - 88, 130, 30);
 
-    // mostri (stessa densità pixel dell'overworld: niente scale spropositati)
-    this.enemySprite = this.add.image(W - 92, 72, "magikarp").setScale(0.62);
-    this.playerSprite = this.add.image(96, H - 104, "charmander-back").setScale(0.78);
+    // mostri: official artwork liscia (475px) scalata
+    this.enemySprite = this.add.image(W - 92, 78, "magikarp-art").setScale(0.26);
+    this.playerSprite = this.add.image(96, H - 96, "charmander-art").setScale(0.30).setFlipX(true);
 
     this.drawHPBox(this.EB.x, this.EB.y, this.EB.w, this.EB.h, "MAGIKARP selv.", 5);
     this.enemyBar = this.add.graphics();
     this.drawHPBox(this.PB.x, this.PB.y, this.PB.w, this.PB.h, "CHARMANDER", 6);
     this.playerBar = this.add.graphics();
     this.playerHpText = this.add.text(this.PB.x + this.PB.w - 6, this.PB.y + this.PB.h - 12, "", {
-      fontFamily: "monospace", fontSize: "9px", color: "#1a1a2e",
+      fontFamily: "Trebuchet MS, Verdana, sans-serif", fontSize: "9px", color: "#1a1a2e",
     }).setOrigin(1, 0);
 
     this.refreshBars();
@@ -66,9 +66,9 @@ export class BattleScene extends Phaser.Scene {
     const g = this.add.graphics();
     g.fillStyle(0xf8f8e8, 0.97).fillRoundedRect(x, y, w, h, 4);
     g.lineStyle(1.5, 0x2a2a3a, 1).strokeRoundedRect(x, y, w, h, 4);
-    this.add.text(x + 6, y + 4, name, { fontFamily: "monospace", fontSize: "9px", color: "#1a1a2e" });
-    this.add.text(x + w - 26, y + 4, "Lv" + lvl, { fontFamily: "monospace", fontSize: "9px", color: "#1a1a2e" });
-    this.add.text(x + 6, y + 16, "HP", { fontFamily: "monospace", fontSize: "8px", color: "#d08a00" });
+    this.add.text(x + 6, y + 4, name, { fontFamily: "Trebuchet MS, Verdana, sans-serif", fontSize: "9px", color: "#1a1a2e" });
+    this.add.text(x + w - 26, y + 4, "Lv" + lvl, { fontFamily: "Trebuchet MS, Verdana, sans-serif", fontSize: "9px", color: "#1a1a2e" });
+    this.add.text(x + 6, y + 16, "HP", { fontFamily: "Trebuchet MS, Verdana, sans-serif", fontSize: "8px", color: "#d08a00" });
   }
 
   private refreshBars(): void {

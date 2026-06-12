@@ -62,7 +62,7 @@ export class BedroomScene extends Phaser.Scene {
     g.fillStyle(0x3b2a1a, 1).fillRect(DOOR_X * TS + 2, DOOR_Y * TS, TS - 4, TS);
     g.fillStyle(0xc9a227, 1).fillCircle(DOOR_X * TS + TS - 8, DOOR_Y * TS + TS / 2, 2);
     this.add.text(DOOR_X * TS + TS / 2, DOOR_Y * TS - 2, "▼", {
-      fontFamily: "monospace", fontSize: "12px", color: "#f8d24a",
+      fontFamily: "Trebuchet MS, Verdana, sans-serif", fontSize: "12px", color: "#f8d24a",
     }).setOrigin(0.5);
 
     const blocked = (tx: number, ty: number): boolean => {
@@ -83,7 +83,7 @@ export class BedroomScene extends Phaser.Scene {
     this.cameras.main.centerOn(W / 2, H / 2);
 
     this.add.text(W / 2, -10, "Cameretta — Pallanza", {
-      fontFamily: "monospace", fontSize: "11px", color: "#f8f8f8",
+      fontFamily: "Trebuchet MS, Verdana, sans-serif", fontSize: "11px", color: "#f8f8f8",
     }).setOrigin(0.5).setScrollFactor(0);
 
     this.dialog = new DialogBox(this);
