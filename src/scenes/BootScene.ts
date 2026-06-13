@@ -10,24 +10,25 @@ export class BootScene extends Phaser.Scene {
     const w = this.scale.width;
     const h = this.scale.height;
     this.add.text(w / 2, h / 2 - 18, "SgravoQuest", {
-      fontFamily: "Trebuchet MS, Verdana, sans-serif",
-      fontSize: "30px",
-      color: "#e6edf3",
+      fontFamily: "monospace", fontSize: "28px", color: "#e6edf3",
     }).setOrigin(0.5);
     const bar = this.add.text(w / 2, h / 2 + 16, "caricamento...", {
-      fontFamily: "Trebuchet MS, Verdana, sans-serif",
-      fontSize: "13px",
-      color: "#8a93a3",
+      fontFamily: "monospace", fontSize: "12px", color: "#8a93a3",
     }).setOrigin(0.5);
     this.load.on("progress", (p: number) => bar.setText(`caricamento... ${Math.round(p * 100)}%`));
 
-    // Mostri: official artwork (smooth, non pixel) da PokeAPI
-    this.load.image("magikarp-art", "assets/monsters/magikarp-art.png");
-    this.load.image("charmander-art", "assets/monsters/charmander-art.png");
+    // Overworld pixel (tileset Tuxemon + personaggio Misa animato)
+    this.load.image("tux-tiles", "assets/tiles/tuxmon-sample-32px-extruded.png");
+    this.load.atlas("misa", "assets/sprites/misa-atlas.png", "assets/sprites/misa-atlas.json");
+    // Interno cameretta pre-renderizzato (32px)
+    this.load.image("bedroom", "assets/tiles/bedroom.png");
+    // Mostri pixel
+    this.load.image("magikarp", "assets/monsters/magikarp-front.png");
+    this.load.image("charmander-back", "assets/monsters/charmander-back.png");
   }
 
   create(): void {
-    GridPlayer.ensureTextures(this);
+    GridPlayer.createAnims(this);
     this.scene.start("bedroom");
   }
 }

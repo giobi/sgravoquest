@@ -21,7 +21,7 @@ export class DialogBox {
     this.box.strokeRoundedRect(0, 0, bw, bh, 5);
 
     this.text = scene.add.text(8, 8, "", {
-      fontFamily: "Trebuchet MS, Verdana, sans-serif",
+      fontFamily: "monospace",
       fontSize: "10px",
       color: "#f8f8f8",
       wordWrap: { width: bw - 16 },
@@ -73,7 +73,7 @@ export class ChoiceMenu {
     this.container = scene.add.container(x, y, [g]).setScrollFactor(0).setDepth(1001);
     labels.forEach((label, i) => {
       const t = scene.add.text(16, 8 + i * 16, label, {
-        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontFamily: "monospace",
         fontSize: "10px",
         color: "#f8f8f8",
       });

@@ -3,9 +3,9 @@ import { GridPlayer } from "../GridPlayer";
 import { DialogBox } from "../ui";
 
 const TS = 32;
-const COLS = 14;
-const ROWS = 8;
-const DOOR_X = 7;
+const COLS = 20;
+const ROWS = 11;
+const DOOR_X = 10; // uscita in basso
 const DOOR_Y = ROWS - 1;
 
 export class BedroomScene extends Phaser.Scene {
@@ -21,78 +21,37 @@ export class BedroomScene extends Phaser.Scene {
     const W = COLS * TS;
     const H = ROWS * TS;
 
-    // Pavimento in legno
-    const g = this.add.graphics();
-    g.fillStyle(0xb5824a, 1).fillRect(0, 0, W, H);
-    g.lineStyle(1, 0x9c6c3a, 0.6);
-    for (let y = TS; y < H; y += TS) g.lineBetween(0, y, W, y);
-    for (let x = 0; x < W; x += TS * 2) g.lineBetween(x, 0, x, H);
+    this.add.image(0, 0, "bedroom").setOrigin(0, 0).setDepth(0);
 
-    // Muri
-    g.fillStyle(0x5a4632, 1);
-    g.fillRect(0, 0, W, TS); // muro alto
-    g.fillRect(0, 0, TS, H); // sx
-    g.fillRect(W - TS, 0, TS, H); // dx
-    g.fillRect(0, H - TS, W, TS); // basso
-    // battiscopa
-    g.fillStyle(0x6e573d, 1).fillRect(TS, TS, W - TS * 2, 4);
-
-    // Finestra sul muro alto (centrata)
-    const winX = Math.round((W - TS * 2) / 2);
-    g.fillStyle(0x8ecae6, 1).fillRect(winX, 6, TS * 2, TS - 12);
-    g.lineStyle(3, 0xe9edf0, 1).strokeRect(winX, 6, TS * 2, TS - 12);
-    g.lineBetween(winX + TS, 6, winX + TS, TS - 6);
-
-    // Letto (top-left, 2 tile)
-    const bx = TS, by = TS;
-    g.fillStyle(0x9c3a3a, 1).fillRect(bx + 2, by + 2, TS * 2 - 4, TS * 2 - 4); // coperta
-    g.fillStyle(0xf4f1de, 1).fillRect(bx + 4, by + 4, TS * 2 - 8, TS - 6); // cuscino
-    g.lineStyle(2, 0x6e2828, 1).strokeRect(bx + 2, by + 2, TS * 2 - 4, TS * 2 - 4);
-
-    // Scrivania + PC sul lato destro (riempie la stanza larga)
-    const dx = (COLS - 3) * TS;
-    g.fillStyle(0x7a5230, 1).fillRect(dx, TS + 4, TS * 2, TS - 6);
-    g.fillStyle(0x2a2a3a, 1).fillRect(dx + TS - 8, TS - 6, 16, 14); // monitor
-    g.fillStyle(0x46d160, 1).fillRect(dx + TS - 6, TS - 4, 12, 10); // schermo
-
-    // Tappeto
-    g.fillStyle(0x3a6ea5, 0.7).fillEllipse(W / 2, H / 2 + 8, TS * 3, TS * 2);
-
-    // Porta (uscita) in basso
-    g.fillStyle(0x3b2a1a, 1).fillRect(DOOR_X * TS + 2, DOOR_Y * TS, TS - 4, TS);
-    g.fillStyle(0xc9a227, 1).fillCircle(DOOR_X * TS + TS - 8, DOOR_Y * TS + TS / 2, 2);
-    this.add.text(DOOR_X * TS + TS / 2, DOOR_Y * TS - 2, "▼", {
-      fontFamily: "Trebuchet MS, Verdana, sans-serif", fontSize: "12px", color: "#f8d24a",
-    }).setOrigin(0.5);
+    // marcatore uscita
+    this.add.text(DOOR_X * TS + TS / 2, DOOR_Y * TS + 6, "▼", {
+      fontFamily: "monospace", fontSize: "14px", color: "#ffe27a",
+    }).setOrigin(0.5).setDepth(5);
 
     const blocked = (tx: number, ty: number): boolean => {
-      if (tx === DOOR_X && ty === DOOR_Y) return false; // porta calpestabile
-      if (tx <= 0 || ty <= 0 || tx >= COLS - 1 || ty >= ROWS - 1) return true; // muri
-      if (tx >= 1 && tx <= 2 && ty >= 1 && ty <= 2) return true; // letto
-      if (tx >= COLS - 3 && tx <= COLS - 2 && ty === 1) return true; // scrivania
+      if (tx < 0 || ty < 0 || tx >= COLS || ty >= ROWS) return true;
+      if (ty <= 1) return true; // muro alto
+      if (tx === 1 && ty >= 2 && ty <= 4) return true; // letto
+      if (tx >= 17 && tx <= 18 && ty === 2) return true; // scaffale
+      if (tx === 17 && ty === 8) return true; // pianta
+      if (tx === 3 && ty === 8) return true; // tavolino
       return false;
     };
 
-    this.player = new GridPlayer(this, TS, 7, 3, blocked, (tx, ty) => this.onTile(tx, ty));
+    this.player = new GridPlayer(this, TS, 10, 6, blocked, (tx, ty) => this.onTile(tx, ty));
     this.player.facing = "down";
 
-    // zoom dinamico: la stanza riempie la viewport (interno piccolo non si perde nel nero)
     this.cameras.main.setBackgroundColor("#0b0e14");
-    const zoom = Math.min(this.scale.width / W, this.scale.height / H);
-    this.cameras.main.setZoom(zoom);
+    this.cameras.main.setZoom(1);
     this.cameras.main.centerOn(W / 2, H / 2);
 
-    this.add.text(W / 2, -10, "Cameretta — Pallanza", {
-      fontFamily: "Trebuchet MS, Verdana, sans-serif", fontSize: "11px", color: "#f8f8f8",
-    }).setOrigin(0.5).setScrollFactor(0);
-
     this.dialog = new DialogBox(this);
-    this.dialog.show("Ti svegli. È mattina a Pallanza. La porta è di sotto (▼). Frecce/WASD per muoverti.");
+    this.dialog.show("Ti svegli. È mattina a Pallanza. Esci dalla porta in basso (▼). Frecce/WASD.");
     this.time.delayedCall(4200, () => this.dialog.hide());
   }
 
   private onTile(tx: number, ty: number): void {
-    if (tx === DOOR_X && ty === DOOR_Y && !this.exiting) {
+    if (ty === DOOR_Y && (tx === DOOR_X || tx === DOOR_X - 1) && !this.exiting) {
       this.exiting = true;
       this.player.enabled = false;
       this.cameras.main.fadeOut(350, 0, 0, 0);
